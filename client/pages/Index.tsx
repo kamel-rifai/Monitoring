@@ -1,106 +1,100 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { FloorSection } from "@/components/FloorSection";
 import { Sidebar } from "@/components/Sidebar";
 import { DeviceModal } from "@/components/DeviceModal";
-import type { Device } from "@shared/api";
-import { cn } from "@/lib/utils";
+import { SwitchModal } from "@/components/SwitchModal";
+import { PatchPanelModal } from "@/components/PatchPanelModal";
+import { HeaderBar } from "@/components/HeaderBar";
+import { DeviceGrid } from "@/components/DeviceGrid";
+import { PatchPanelGrid } from "@/components/PatchPanelGrid";
+import { NetworkGrid } from "@/components/NetworkGrid";
+import { FLOORS } from "@/constants/floors";
+import { useDevices } from "@/hooks/useDevices";
+import { useDeviceFilters } from "@/hooks/useDeviceFilters";
+import {
+  useFilteredDevices,
+  useFilteredSwitches,
+  useFilteredPatchPanels,
+} from "@/hooks/useFilteredDevices";
+import type { Device, Switch, PatchPanel } from "@shared/api";
 import { Plus } from "lucide-react";
-
-const API_URL = "http://192.168.1.18:3666/devices";
-
-async function fetchDevices(): Promise<Device[]> {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to fetch devices: ${res.status}`);
-  const data = (await res.json()) as Device[];
-  return data;
-}
+import {
+  addDevice,
+  editDevice,
+  addSwitch,
+  editSwitch,
+  addPatchPanel,
+  editPatchPanel,
+} from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Index() {
-  const { data, isLoading, isError, error } = useQuery<Device[]>({
-    queryKey: ["devices"],
-    queryFn: fetchDevices,
-    refetchInterval: 5000000,
-    refetchOnWindowFocus: false,
-  });
+  const queryClient = useQueryClient();
+  const {
+    devices,
+    deviceTypes,
+    switches,
+    patchPanels,
+    isLoading,
+    isError,
+    error,
+    refresh,
+    isRefreshing,
+  } = useDevices();
 
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(["telephone"]);
+  const filters = useDeviceFilters();
+  const { filtered, floors } = useFilteredDevices(devices, filters);
+  const { filtered: filteredSwitches, floors: switchFloors } =
+    useFilteredSwitches(switches, filters.searchQuery, filters.isStrictSearch);
+  const { filtered: filteredPatchPanels, floors: patchPanelFloors } =
+    useFilteredPatchPanels(
+      patchPanels,
+      filters.searchQuery,
+      filters.isStrictSearch,
+    );
+
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [inactiveOnly, setInactiveOnly] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<
+    Device | Switch | PatchPanel | null
+  >(null);
+  const [selectedSwitch, setSelectedSwitch] = useState<Switch | null>(null);
+  const [selectedPatchPanel, setSelectedPatchPanel] =
+    useState<PatchPanel | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"view" | "edit" | "add">("view");
-  const [overrides, setOverrides] = useState<Record<string, Partial<Device>>>(
-    {},
-  );
-  const [addedDevices, setAddedDevices] = useState<Device[]>([]);
-
-  const merged = useMemo(() => {
-    const base = (data ?? []).map((d) => ({
-      ...d,
-      ...(overrides[String(d.id)] || {}),
-    }));
-    return [...base, ...addedDevices];
-  }, [data, overrides, addedDevices]);
-
-  const deviceTypes = useMemo(() => {
-    const set = new Set<string>();
-    merged.forEach((d) => set.add(d.type));
-    return Array.from(set);
-  }, [merged]);
-
-  const filtered = useMemo(() => {
-    if (!merged) return [] as Device[];
-    let list = merged;
-    if (inactiveOnly) list = list.filter((d) => !d.active);
-    if (selectedTypes.length > 0)
-      list = list.filter((d) => selectedTypes.includes(d.type));
-    return list;
-  }, [merged, selectedTypes, inactiveOnly]);
-
-  const floors = useMemo(() => [10, 9, 8, 7, 6, 5, 4, 3, 2, 12, 11, 1], []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 dark:from-slate-950 dark:to-slate-900">
-      <header className="fixed inset-x-0 top-0 z-40 pointer-events-none">
-        <div className="pointer-events-auto md:ml-52 border-b border-slate-200/70 bg-white/85 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/70 md:px-6">
-          <div className="mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight md:text-xl">
-                Building Devices Dashboard
-              </h1>
-              <p className="text-xs text-slate-500 md:text-sm">
-                Live overview of devices across floors
-              </p>
-            </div>
-            <button
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm shadow-sm transition hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 md:hidden"
-              onClick={() => setMobileSidebarOpen(true)}
-              aria-label="Open filters"
-            >
-              Filters
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-100 text-slate-900 dark:from-slate-950 dark:to-slate-900">
+      <HeaderBar
+        searchQuery={filters.searchQuery}
+        setSearchQuery={filters.setSearchQuery}
+        isStrictSearch={filters.isStrictSearch}
+        setIsStrictSearch={filters.setIsStrictSearch}
+        isRefreshing={isRefreshing}
+        onRefresh={refresh}
+        onOpenMobileFilters={() => setMobileSidebarOpen(true)}
+      />
       <div className="flex">
         {/* Desktop sidebar */}
         <div className="hidden md:block">
           <Sidebar
             mode={"filters"}
             types={deviceTypes}
-            selected={selectedTypes}
+            selected={filters.selectedTypes}
             onToggle={(t) => {
-              setInactiveOnly(false);
-              setSelectedTypes((prev) => (prev[0] === t ? [] : [t]));
+              filters.setInactiveOnly(false);
+              filters.setSelectedTypes((prev) => (prev[0] === t ? [] : [t]));
             }}
-            onClear={() => setSelectedTypes([])}
-            inactiveOnly={inactiveOnly}
+            onClear={() => filters.setSelectedTypes([])}
+            inactiveOnly={filters.inactiveOnly}
             onToggleInactive={() => {
-              setInactiveOnly((v) => !v);
-              setSelectedTypes([]);
+              filters.setInactiveOnly((v) => !v);
+              filters.setSelectedTypes([]);
             }}
-            className="fixed inset-y-0 left-0 h-screen z-30 pt-16"
+            onRefresh={refresh}
+            isRefreshing={isRefreshing}
+            className="fixed inset-y-0 left-0 h-screen w-[13vw] z-30 pt-16"
           />
         </div>
 
@@ -115,24 +109,28 @@ export default function Index() {
               <Sidebar
                 mode={"filters"}
                 types={deviceTypes}
-                selected={selectedTypes}
+                selected={filters.selectedTypes}
                 onToggle={(t) => {
-                  setInactiveOnly(false);
-                  setSelectedTypes((prev) => (prev[0] === t ? [] : [t]));
+                  filters.setInactiveOnly(false);
+                  filters.setSelectedTypes((prev) =>
+                    prev[0] === t ? [] : [t],
+                  );
                 }}
-                onClear={() => setSelectedTypes([])}
-                inactiveOnly={inactiveOnly}
+                onClear={() => filters.setSelectedTypes([])}
+                inactiveOnly={filters.inactiveOnly}
                 onToggleInactive={() => {
-                  setInactiveOnly((v) => !v);
-                  setSelectedTypes([]);
+                  filters.setInactiveOnly((v) => !v);
+                  filters.setSelectedTypes([]);
                 }}
+                onRefresh={refresh}
+                isRefreshing={isRefreshing}
                 className="h-full"
               />
             </div>
           </>
         )}
 
-        <main className="flex-1 pt-16 md:ml-56">
+        <main className="flex-1 pt-16 ml-[13vw]">
           {isLoading && (
             <div className="flex h-[50vh] items-center justify-center">
               <div
@@ -143,85 +141,318 @@ export default function Index() {
           )}
           {isError && (
             <div className="px-4 py-6 text-center text-sm text-rose-600 md:px-6">
-              Failed to load devices. Ensure the API is running at {API_URL}.{" "}
+              <p className="font-semibold">Failed to load devices.</p>
+              <p className="mt-1 mb-2">
+                If this message persists, please contact me (Kamel Rifai).
+              </p>
               {String((error as Error)?.message ?? "")}
             </div>
           )}
 
           {!isLoading && !isError && (
-            <div className="divide-y divide-slate-200 dark:divide-slate-800/60 bg-gray-100">
-              {floors.map((f) => (
-                <FloorSection
-                  key={f}
-                  floor={f}
-                  title={
-                    f === 0
-                      ? "Underground Floor"
-                      : f === 11
-                        ? "Clinics Section"
-                        : f === 12
-                          ? "Kidney Section"
-                          : undefined
-                  }
-                  devices={filtered.filter((d) => d.floor === f)}
+            <>
+              {filters.selectedTypes.length === 1 &&
+              filters.selectedTypes[0] === "Switch" ? (
+                <NetworkGrid
+                  switches={filteredSwitches}
+                  deviceType="switch"
+                  onDeviceLongPress={(d) => {
+                    setSelectedSwitch(d);
+                    setModalMode("view");
+                    setModalOpen(true);
+                  }}
+                />
+              ) : filters.selectedTypes.length === 1 &&
+                filters.selectedTypes[0] === "Patch-Panel" ? (
+                <PatchPanelGrid
+                  patchPanels={filteredPatchPanels}
+                  deviceType="patch-panel"
+                  onDeviceLongPress={(d) => {
+                    setSelectedPatchPanel(d);
+                    setModalMode("view");
+                    setModalOpen(true);
+                  }}
+                />
+              ) : (
+                <DeviceGrid
+                  floors={floors}
+                  devices={filtered}
                   onDeviceLongPress={(d) => {
                     setSelectedDevice(d);
                     setModalMode("view");
                     setModalOpen(true);
                   }}
                 />
-              ))}
-            </div>
+              )}
+            </>
           )}
         </main>
 
-        {/* Add Device FAB */}
-        <button
-          className="fixed bottom-5 right-5 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900 md:bottom-6 md:right-6"
-          aria-label="Add device"
-          onClick={() => {
-            setSelectedDevice(null);
-            setModalMode("add");
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+        {/* Add Buttons */}
+        <div className="fixed bottom-5 right-5 z-40 flex items-start flex-col gap-0 md:bottom-6 md:right-2">
+          {/* Add Switch Button */}
+          <button
+            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+            aria-label="Add switch"
+            onClick={() => {
+              setSelectedSwitch({
+                id: "",
+                name: "",
+                type: "switch",
+                floor: 1,
+                active: true,
+                unique_id: "",
+                model: "",
+                place: "",
+                Mac: "",
+                IP: "",
+                Notes: "",
+                POE: false,
+                total_ports: 48,
+                total_fiber_ports: 0,
+                ports: Array.from({ length: 16 }, (_, i) => ({
+                  id: null,
+                  port_number: i + 1,
+                  title: `Port ${i + 1}`,
+                  unique_id: "",
+                  switch_id: null,
+                  device_id: null,
+                  device: null,
+                  switch: null,
+                  patch_panel_port: null,
+                })),
+                show: true,
+              });
+              setModalMode("add");
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="ring-1 ring-emerald-300 size-8 mr-1 bg-emerald-500 text-white p-2 rounded-full shadow-sm" />
+            <span className="p-2 px-6 bg-emerald-500 rounded-full border border-emerald-300 shadow-sm">
+              Switch
+            </span>
+          </button>
+
+          {/* Add Patch Panel Button */}
+          <button
+            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+            aria-label="Add patch panel"
+            onClick={() => {
+              setSelectedPatchPanel({
+                id: "",
+                title: "",
+                unique_id: "",
+                show: true,
+                floor: 1,
+                ports: Array.from({ length: 24 }, (_, i) => ({
+                  id: null,
+                  title: `Port ${i + 1}`,
+                  port_number: i + 1,
+                  switch_port: null,
+                })),
+              });
+              setModalMode("add");
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="ring-1 ring-blue-300 size-8 mr-1 bg-blue-500 text-white p-2 rounded-full shadow-sm" />
+            <span className="p-2 px-6 bg-blue-500 rounded-full border border-blue-300 shadow-sm">
+              Patch Panel
+            </span>
+          </button>
+
+          {/* Add Device Button */}
+          <button
+            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+            aria-label="Add device"
+            onClick={() => {
+              setSelectedDevice(null);
+              setModalMode("add");
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="ring-1 ring-slate-500 size-8  mr-1 bg-slate-900 text-white p-2 rounded-full shadow-sm" />
+            <span className="p-2 px-6 bg-slate-900 rounded-full border border-slate-500 shadow-sm">
+              Device
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Device Modal */}
-      <DeviceModal
-        open={modalOpen}
-        device={selectedDevice}
-        mode={modalMode}
-        onOpenChange={setModalOpen}
-        onSave={(dev) => {
-          if (modalMode === "view") {
-            setModalMode("edit");
-            return;
-          }
-          if (modalMode === "edit" && selectedDevice) {
-            setOverrides((m) => ({
-              ...m,
-              [String(selectedDevice.id)]: {
-                ...m[String(selectedDevice.id)],
-                ...dev,
-              },
-            }));
-            setModalOpen(false);
-            setModalMode("view");
-            return;
-          }
-          if (modalMode === "add") {
-            const id = `local-${Date.now()}`;
-            const newDevice: Device = { ...dev, id };
-            setAddedDevices((arr) => [...arr, newDevice]);
-            setModalOpen(false);
-            setModalMode("view");
-            return;
-          }
-        }}
-      />
+      {(() => {
+        // Check for patch panel first (most specific)
+        if (selectedPatchPanel) {
+          return (
+            <PatchPanelModal
+              open={modalOpen}
+              patchPanel={selectedPatchPanel}
+              mode={modalMode}
+              isSubmitting={isSubmitting}
+              availableSwitches={switches}
+              allPatchPanels={patchPanels}
+              onOpenChange={(open) => {
+                setModalOpen(open);
+                if (!open) {
+                  setSelectedPatchPanel(null);
+                }
+              }}
+              onSave={async (patch) => {
+                if (modalMode === "view") {
+                  setModalMode("edit");
+                  return;
+                }
+
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+
+                try {
+                  if (modalMode === "add") {
+                    await addPatchPanel(patch);
+                    // Refetch the devices data
+                    await queryClient.invalidateQueries({
+                      queryKey: ["devices"],
+                    });
+                    setModalOpen(false);
+                    setModalMode("view");
+                    setSelectedPatchPanel(null);
+                  } else if (modalMode === "edit" && selectedPatchPanel) {
+                    const updatedPatchPanel = {
+                      id: selectedPatchPanel.id,
+                      title: patch.title,
+                      unique_id: patch.unique_id,
+                      show: patch.show,
+                      ports: patch.ports,
+                      floor: patch.floor,
+                    };
+                    await editPatchPanel(updatedPatchPanel);
+                    // Refetch the devices data
+                    await queryClient.invalidateQueries({
+                      queryKey: ["devices"],
+                    });
+                    setModalOpen(false);
+                    setModalMode("view");
+                    setSelectedPatchPanel(null);
+                  }
+                } catch (error) {
+                  console.error("Failed to save patch panel:", error);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+            />
+          );
+        }
+
+        // Check for switch second
+        if (selectedSwitch) {
+          const switchData = selectedSwitch;
+          return (
+            <SwitchModal
+              open={modalOpen}
+              switch={switchData}
+              mode={modalMode}
+              isSubmitting={isSubmitting}
+              availableDevices={devices}
+              onOpenChange={(open) => {
+                setModalOpen(open);
+                if (!open) {
+                  setSelectedSwitch(null);
+                }
+              }}
+              onSave={async (dev) => {
+                if (modalMode === "view") {
+                  setModalMode("edit");
+                  return;
+                }
+
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+
+                try {
+                  if (modalMode === "add") {
+                    const createdSwitch = await addSwitch(dev);
+
+                    // Refetches devices data to get the updated switch with proper IDs
+                    await queryClient.invalidateQueries({
+                      queryKey: ["devices"],
+                    });
+                    setModalOpen(false);
+                    setModalMode("view");
+                    setSelectedSwitch(null);
+                  } else if (modalMode === "edit" && switchData) {
+                    const updatedSwitch = {
+                      ...dev,
+                      id: switchData.id,
+                    };
+                    await editSwitch(updatedSwitch);
+                    // Refetch the devices data
+                    await queryClient.invalidateQueries({
+                      queryKey: ["devices"],
+                    });
+                    setModalOpen(false);
+                    setModalMode("view");
+                    setSelectedSwitch(null);
+                  }
+                } catch (error) {
+                  console.error("Failed to save switch:", error);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+            />
+          );
+        }
+
+        // Default to device modal
+        return (
+          <DeviceModal
+            open={modalOpen}
+            device={selectedDevice as Device}
+            mode={modalMode}
+            isSubmitting={isSubmitting}
+            onOpenChange={setModalOpen}
+            switches={switches}
+            onSave={async (dev) => {
+              if (modalMode === "view") {
+                setModalMode("edit");
+                return;
+              }
+
+              if (isSubmitting) return;
+              setIsSubmitting(true);
+
+              try {
+                if (modalMode === "edit" && selectedDevice) {
+                  const updatedDevice = {
+                    ...dev,
+                    id: selectedDevice.id,
+                  };
+                  await editDevice(updatedDevice);
+                  // Refetch the devices data
+                  await queryClient.invalidateQueries({
+                    queryKey: ["devices"],
+                  });
+                  setModalOpen(false);
+                  setModalMode("view");
+                } else if (modalMode === "add") {
+                  const newDevice = await addDevice(dev);
+                  // Refetch the devices data
+                  await queryClient.invalidateQueries({
+                    queryKey: ["devices"],
+                  });
+                  setModalOpen(false);
+                  setModalMode("view");
+                }
+              } catch (error) {
+                console.error("Failed to save device:", error);
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

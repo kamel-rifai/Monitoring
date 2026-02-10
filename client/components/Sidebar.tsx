@@ -16,6 +16,7 @@ import {
   BadgeInfo,
   CheckCircle2,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 
 export interface SidebarProps {
@@ -28,6 +29,8 @@ export interface SidebarProps {
   onBack?: () => void;
   inactiveOnly?: boolean;
   onToggleInactive?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
   className?: string;
 }
 
@@ -65,20 +68,22 @@ export function Sidebar({
   onBack,
   inactiveOnly,
   onToggleInactive,
+  onRefresh,
+  isRefreshing,
   className,
 }: SidebarProps) {
   const showFilters = mode === "filters";
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 h-full w-56 shrink-0 border-r border-slate-200 bg-white/80 p-4 backdrop-blur-md dark:border-slate-800/60 dark:bg-slate-900/70 flex flex-col",
+        "fixed inset-y-0 left-0 h-full w-56 shrink-0 border-r border-slate-200 bg-white/80 p-1 backdrop-blur-md dark:border-slate-800/60 dark:bg-slate-900/70 flex flex-col",
         className,
       )}
     >
       {showFilters ? (
         <>
           <div className="flex items-center justify-center">
-            <div className="mb-8 -mt-12 flex-col items-center justify-center bg-gray-100 px-4 p-1">
+            <div className="mb-8 -mt-12 flex-col items-center justify-center bg-gray-100 px-1 p-1">
               <div className="flex-col items-center">
                 <img src="/rjdata.png" alt="" className="w-20 -mb-2" />
               </div>
@@ -89,8 +94,10 @@ export function Sidebar({
           </div>
 
           <div className="mb-4">
-            <h1 className="text-lg font-bold tracking-tight">Devices</h1>
-            <p className="text-xs text-slate-500">Filter by type</p>
+            <h1 className="ml-4 text-lg font-bold tracking-tight">
+              IT Devices
+            </h1>
+            <p className="ml-4 text-xs text-slate-500">Filter by type</p>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -100,18 +107,25 @@ export function Sidebar({
               onToggle={onToggle ?? (() => {})}
               onClear={onClear ?? (() => {})}
             />
-
-            <div className="mt-6 space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-slate-600">
-                <StatusDot active /> <span>Active</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <StatusDot active={false} /> <span>Inactive</span>
-              </div>
-            </div>
           </div>
 
-          <div className="mt-auto border-t border-slate-200 pt-3 dark:border-slate-800/60">
+          <div className="mt-auto border-t border-slate-200 pt-3 pb-2 px-2 dark:border-slate-800/60 space-y-2">
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm transition active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed",
+                isRefreshing
+                  ? "border-blue-600 bg-blue-600 text-white hover:bg-blue-500"
+                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
+              )}
+            >
+              <RefreshCw
+                className={cn("size-4", isRefreshing && "animate-spin")}
+              />
+              <span>{isRefreshing ? "Refreshing..." : "Instant Refresh"}</span>
+            </button>
             <button
               type="button"
               onClick={onToggleInactive}
@@ -166,17 +180,17 @@ export function Sidebar({
             <Row
               label="MAC"
               icon={<Network className="size-4" />}
-              value={<span className="font-mono">{device?.mac}</span>}
+              value={<span className="font-mono">{device?.Mac}</span>}
             />
             <Row
               label="IP"
               icon={<Globe className="size-4" />}
-              value={<span className="font-mono">{device?.ip}</span>}
+              value={<span className="font-mono">{device?.IP}</span>}
             />
             <Row
               label="Notes"
               icon={<StickyNote className="size-4" />}
-              value={device?.notes || ""}
+              value={device?.Notes || ""}
             />
             <Row
               label="Show"
