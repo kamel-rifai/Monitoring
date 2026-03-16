@@ -8,6 +8,7 @@ import {
   Cctv,
   EthernetPort,
   PanelTop,
+  Cable,
 } from "lucide-react";
 
 export interface FilterBarProps {
@@ -33,6 +34,8 @@ function TypeIcon({ type }: { type: string }) {
       return <EthernetPort className="size-4" />;
     case "Patch-Panel":
       return <PanelTop className="size-4" />;
+    case "Cables":
+      return <Cable className="size-4" />;
     default:
       return <Box className="size-4" />;
   }
@@ -40,7 +43,7 @@ function TypeIcon({ type }: { type: string }) {
 
 export function FilterBar({ types, selected, onToggle }: FilterBarProps) {
   const allTypes = useMemo(
-    () => types.sort((a, b) => a.localeCompare(b)),
+    () => types.filter(Boolean).sort((a, b) => a.localeCompare(b)),
     [types],
   );
   function capitalizeFirstLetter(inputString: string): string {
@@ -51,7 +54,7 @@ export function FilterBar({ types, selected, onToggle }: FilterBarProps) {
   }
 
   return (
-    <div className="mt-2 flex flex-col gap-2 items-center justify-center">
+    <div className="mt-2 flex flex-col gap-2 items-start m-2 justify-start">
       {allTypes.map((t) => {
         const active = selected.includes(t);
         return (
@@ -64,8 +67,8 @@ export function FilterBar({ types, selected, onToggle }: FilterBarProps) {
               className={`${
                 active
                   ? "bg-[#0F2854] shadow-2xl border border-[#0F2854]/40"
-                  : "bg-[#035AD7]/75 border border-[#035AD7]/10"
-              } flex items-center w-[10.5vw] p-2 py-2 justify-start text-white rounded-2xl transition-transform duration-200 hover:scale-105 `}
+                  : "bg-[#035AD7]/75 border border-[#035AD7]/10 hover:bg-[#035AD7]/80 transition dirat "
+              } flex items-center w-[11.5vw] p-2 py-1.8 justify-start text-white rounded-2xl  `}
             >
               <div
                 className={

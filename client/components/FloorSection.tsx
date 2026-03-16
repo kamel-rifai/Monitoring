@@ -18,7 +18,7 @@ function FloorSectionBase({
   const heading = title ?? `Floor ${floor}`;
   return (
     <section
-      className="bg-slate-300/20  flex min-h-[120px] flex-col gap-3 border-b border-slate-200 px-4 py-4 last:border-0 dark:border-slate-800/60 md:px-6"
+      className="bg-slate-300/20 flex min-h-[120px] flex-col gap-3 border-b border-slate-200 px-4 py-4 last:border-0 dark:border-slate-800/60 md:px-6"
       aria-label={heading}
     >
       <div className="flex shrink-0 items-center justify-between">

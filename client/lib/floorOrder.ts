@@ -1,7 +1,7 @@
 // Custom floor order configuration
 export const FLOOR_ORDER = [
   10, // الطابق العاشر
-  9, // الطابق التاسع
+  9, // الطابق التاسع CF01-
   8, // الطابق الثامن
   7, // الطابق السابع
   6, // الطابق السادس
@@ -14,7 +14,7 @@ export const FLOOR_ORDER = [
   12, // كبين الاسعاف
   11, // العيادات
   1, // الطابق الأرضي
-  0, // Underground Floor // كبين التدريب
+  0, // Underground Floor
 ];
 
 // Function to sort floors according to custom order

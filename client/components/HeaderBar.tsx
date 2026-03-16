@@ -22,9 +22,9 @@ export function HeaderBar({
 }: HeaderBarProps) {
   return (
     <header className="fixed inset-x-0 top-0 z-40 pointer-events-none">
-      <div className="pointer-events-auto md:ml-[13vw] border-b border-slate-200 px-4 py-2 shadow-sm backdrop-blur-sm bg-black/5 dark:border-slate-800/60 dark:bg-slate-900/70 md:px-6">
+      <div className="pointer-events-auto md:ml-[13vw] px-4 py-0 backdrop-blur-3xl  bg-white/90 md:px-6">
         <div className="mx-auto flex items-center gap-4 justify-between">
-          <div className="min-w-0 backdrop-blur-3xl bg-white px-4 rounded-lg py-2">
+          <div className="min-w-0 backdrop-blur-3xl px-4 rounded-lg py-2">
             <h1 className="text-lg font-semibold tracking-tight md:text-xl">
               IT Devices Monitoring Dashboard
             </h1>
@@ -33,13 +33,13 @@ export function HeaderBar({
             </p>
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1 max-w-xl">
-            <div className="relative mr-8 w-full hover:scale-[1.01] transition-transform">
+            <div className="relative mr-8 w-full">
               <Search className="absolute left-2 top-1/2 z-50 -translate-y-1/2 size-4 text-slate-600" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search"
-                className="px-8 backdrop-blur-lg bg-white rounded-full py-5"
+                className="px-8 backdrop-blur-lg bg-white rounded-lg py-2 border-1 ring-1 ring-gray-300 focus:border-none focus:ring-0 shadow-none outline-none focus:outline-none"
                 aria-label="Search devices"
               />
               {searchQuery && (
@@ -54,7 +54,7 @@ export function HeaderBar({
             </div>
             <button
               className={
-                "absolute right-0 top-1/2 mr-2 hover:scale-[1.02] transition-transform -translate-y-1/2 text-slate-400 hover:text-slate-600 ring ring-[#e2e8f0] p-3 rounded-full" +
+                "absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ring-1 ring-gray-300 p-3 rounded-lg" +
                 (isStrictSearch
                   ? " bg-[#035AD7]/75 text-white hover:text-white"
                   : " bg-white")

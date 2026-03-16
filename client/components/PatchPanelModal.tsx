@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { PatchPanel, Switch } from "@shared/api";
 import { cn } from "@/lib/utils";
 import { PatchPanelPortConfigModal } from "./PatchPanelPortConfigModal";
@@ -23,6 +24,7 @@ export interface PatchPanelModalProps {
   onSave: (patchPanel: PatchPanel) => void;
   availableSwitches?: Switch[];
   allPatchPanels?: PatchPanel[];
+  onUpdate?: (updatedPatchPanel: PatchPanel) => void; // Add callback for updates
 }
 
 export function PatchPanelModal({
@@ -34,6 +36,7 @@ export function PatchPanelModal({
   onSave,
   availableSwitches = [],
   allPatchPanels = [],
+  onUpdate,
 }: PatchPanelModalProps) {
   const isAdd = mode === "add";
   const isEdit = mode === "edit";
@@ -75,7 +78,7 @@ export function PatchPanelModal({
   const base: PatchPanel = useMemo(
     () =>
       patchPanel ?? {
-        id: "",
+        id: 0,
         title: "",
         unique_id: "",
         show: true,
@@ -85,6 +88,7 @@ export function PatchPanelModal({
     [patchPanel],
   );
 
+  const queryClient = useQueryClient();
   const [form, setForm] = useState<PatchPanel>(base);
   useEffect(() => setForm(base), [base, open]);
 
@@ -97,22 +101,42 @@ export function PatchPanelModal({
         (port) => port.port_number === updatedPort.port_number,
       );
 
-      if (existingPortIndex >= 0) {
-        // Update existing port
-        return {
-          ...prev,
-          ports: prev.ports.map((port) =>
-            port.port_number === updatedPort.port_number ? updatedPort : port,
-          ),
-        };
-      } else {
-        // Add new port
-        return {
-          ...prev,
-          ports: [...prev.ports, updatedPort],
-        };
+      const updatedForm =
+        existingPortIndex >= 0
+          ? {
+              ...prev,
+              ports: prev.ports.map((port) =>
+                port.port_number === updatedPort.port_number
+                  ? updatedPort
+                  : port,
+              ),
+            }
+          : {
+              ...prev,
+              ports: [...prev.ports, updatedPort],
+            };
+
+      // Update global cache to reflect changes immediately
+      if (form.id && updatedForm.id) {
+        queryClient.setQueryData(["devices"], (oldData: any) => {
+          if (!oldData || !oldData.patchpanels) return oldData;
+          return {
+            ...oldData,
+            patchpanels: oldData.patchpanels.map((pp: any) =>
+              pp.id === updatedForm.id ? updatedForm : pp,
+            ),
+          };
+        });
+
+        // Notify parent component of the update
+        if (onUpdate) {
+          onUpdate(updatedForm);
+        }
       }
+
+      return updatedForm;
     });
+    setSelectedPort(updatedPort);
   };
 
   return (

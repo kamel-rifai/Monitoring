@@ -126,6 +126,7 @@ export function Sidebar({
               />
               <span>{isRefreshing ? "Refreshing..." : "Instant Refresh"}</span>
             </button>
+
             <button
               type="button"
               onClick={onToggleInactive}

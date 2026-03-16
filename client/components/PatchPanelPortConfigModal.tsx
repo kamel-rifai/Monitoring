@@ -56,9 +56,9 @@ export function PatchPanelPortConfigModal({
     }[]
   >([]);
 
-  // Reset state when port changes or modal opens/closes
+  // Reset state when port changes
   useEffect(() => {
-    if (open && port) {
+    if (port) {
       setSelectedSwitchPort(
         port.switch_port
           ? {
@@ -70,14 +70,14 @@ export function PatchPanelPortConfigModal({
       setPortTitle(port.title || "");
       setCableNumber(port.cable_number || "");
       setCableLength(port.cable_length || "");
-    } else if (!open) {
-      // Reset all fields when modal closes
+    } else {
+      // Reset all fields when no port
       setSelectedSwitchPort(null);
       setPortTitle("");
       setCableNumber("");
       setCableLength("");
     }
-  }, [port, open]);
+  }, [port]);
 
   // Fetch available ports when component mounts or switches change
   useEffect(() => {

@@ -139,7 +139,7 @@ export function PortVisualization({
                           switch: port.switch,
                         }
                       : undefined,
-                  },
+                  } as any,
                 )
               }
               className={cn(

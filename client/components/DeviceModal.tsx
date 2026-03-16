@@ -67,7 +67,7 @@ export function DeviceModal({
       return device;
     }
     return {
-      id: "",
+      id: 0,
       name: "",
       type: "camera",
       floor: 0,

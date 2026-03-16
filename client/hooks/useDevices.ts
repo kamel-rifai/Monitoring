@@ -63,6 +63,7 @@ export function useDevices(): UseDevicesReturn {
     devices.forEach((d) => set.add(d.type));
     set.add("Switch");
     set.add("Patch-Panel");
+    set.add("Cables");
     return Array.from(set);
   }, [devices]);
 

@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Switch, Device } from "@shared/api";
 import { cn } from "@/lib/utils";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -67,6 +68,7 @@ export interface SwitchModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (switchDevice: Switch) => void;
   availableDevices?: Device[];
+  onUpdate?: (updatedSwitch: Switch) => void;
 }
 
 export function SwitchModal({
@@ -77,9 +79,11 @@ export function SwitchModal({
   onOpenChange,
   onSave,
   availableDevices = [],
+  onUpdate,
 }: SwitchModalProps) {
   const isAdd = mode === "add";
   const isEdit = mode === "edit";
+  const queryClient = useQueryClient();
   const [selectedPort, setSelectedPort] = useState<Switch["ports"][0] | null>(
     null,
   );
@@ -96,7 +100,7 @@ export function SwitchModal({
   const base: Switch = useMemo(
     () =>
       switchDevice ?? {
-        id: "",
+        id: 0,
         name: "",
         type: "switch",
         floor: 0,
@@ -139,12 +143,34 @@ export function SwitchModal({
   const canSave = form.name && form.type && form.floor >= 0 && form.floor <= 16;
 
   const handlePortUpdate = (updatedPort: any) => {
+    // Calculate new ports array first
+    const newPorts = form.ports.map((port: any) =>
+      port.port_number === updatedPort.port_number ? updatedPort : port,
+    );
+
+    // Update local form state
     setForm((prev: any) => ({
       ...prev,
-      ports: prev.ports.map((port: any) =>
-        port.port_number === updatedPort.port_number ? updatedPort : port,
-      ),
+      ports: newPorts,
     }));
+
+    // Update global cache with the new ports data
+    if (form.id) {
+      queryClient.setQueryData(["devices"], (oldData: any) => {
+        if (!oldData || !oldData.switches) return oldData;
+        return {
+          ...oldData,
+          switches: oldData.switches.map((sw: any) =>
+            sw.id === form.id ? { ...form, ports: newPorts } : sw,
+          ),
+        };
+      });
+
+      // Notify parent component of the update with new data
+      if (onUpdate) {
+        onUpdate({ ...form, ports: newPorts });
+      }
+    }
   };
 
   const handleAutoAssignPorts = async () => {
@@ -154,6 +180,22 @@ export function SwitchModal({
     try {
       const updatedSwitch = await AutoPortsDetect({ switchId: form.id });
       setForm(updatedSwitch);
+
+      // Update global cache to reflect changes immediately
+      queryClient.setQueryData(["devices"], (oldData: any) => {
+        if (!oldData || !oldData.switches) return oldData;
+        return {
+          ...oldData,
+          switches: oldData.switches.map((sw: any) =>
+            sw.id === form.id ? updatedSwitch : sw,
+          ),
+        };
+      });
+
+      // Notify parent component of the update
+      if (onUpdate) {
+        onUpdate(updatedSwitch);
+      }
     } catch (error) {
       console.error("Failed to auto-assign ports:", error);
     } finally {

@@ -20,36 +20,36 @@ export type DeviceType =
   | string;
 
 export interface Device {
-  id: string | number;
+  id: number;
   name: string;
   type: DeviceType;
   floor: number;
   active: boolean; // true => Active, false => Inactive
   // Optional extended details used in the sidebar detail view
-  model?: string;
-  place?: string;
-  cableNumber?: string;
-  Mac?: string; // Note: API uses capital M
-  IP?: string; // Note: API uses capital I
-  Notes?: string;
-  show?: boolean;
-  date?: string; // ISO date string
+  model: string;
+  place: string;
+  cableNumber: string;
+  Mac: string; // Note: API uses capital M
+  IP: string; // Note: API uses capital I
+  Notes: string;
+  show: boolean;
+  date: string; // ISO date string
 }
 
 export interface Switch {
-  id: string | number;
+  id: number;
   name: string;
   type: "switch";
   floor: number;
   active: boolean;
   unique_id: string;
   total_ports: number;
-  total_fiber_ports?: number;
-  model?: string;
-  place?: string;
-  Mac?: string;
-  IP?: string;
-  Notes?: string;
+  total_fiber_ports: number;
+  model: string;
+  place: string;
+  Mac: string;
+  IP: string;
+  Notes: string;
   POE: boolean;
   ports: {
     id: number;
@@ -72,15 +72,15 @@ export interface Switch {
     };
     device?: Device;
   }[];
-  show?: boolean;
+  show: boolean;
 }
 
 export interface PatchPanel {
-  id: string | number;
+  id: number;
   title: string;
   floor: number;
   unique_id: string;
-  show?: boolean;
+  show: boolean;
   ports: {
     id: number;
     title: string;
@@ -95,8 +95,8 @@ export interface PatchPanel {
         type: DeviceType;
       };
     };
-    cable_number?: string;
-    cable_length?: string;
+    cable_number: string;
+    cable_length: string;
   }[];
 }
 [];

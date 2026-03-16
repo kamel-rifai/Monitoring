@@ -27,6 +27,7 @@ import {
   editPatchPanel,
 } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import CableManagement from "@/components/CableSection";
 
 export default function Index() {
   const queryClient = useQueryClient();
@@ -130,7 +131,7 @@ export default function Index() {
           </>
         )}
 
-        <main className="flex-1 pt-16 ml-[13vw]">
+        <main className="flex-1 pt-14 ml-[13vw]">
           {isLoading && (
             <div className="flex h-[50vh] items-center justify-center">
               <div
@@ -173,6 +174,13 @@ export default function Index() {
                     setModalOpen(true);
                   }}
                 />
+              ) : filters.selectedTypes.includes("Cables") ? (
+                <CableManagement
+                  devices={filtered}
+                  switches={filteredSwitches}
+                  patchpanels={filteredPatchPanels}
+                  onRefresh={refresh}
+                />
               ) : (
                 <DeviceGrid
                   floors={floors}
@@ -189,94 +197,98 @@ export default function Index() {
         </main>
 
         {/* Add Buttons */}
-        <div className="fixed bottom-5 right-5 z-40 flex items-start flex-col gap-0 md:bottom-6 md:right-2">
-          {/* Add Switch Button */}
-          <button
-            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-            aria-label="Add switch"
-            onClick={() => {
-              setSelectedSwitch({
-                id: "",
-                name: "",
-                type: "switch",
-                floor: 1,
-                active: true,
-                unique_id: "",
-                model: "",
-                place: "",
-                Mac: "",
-                IP: "",
-                Notes: "",
-                POE: false,
-                total_ports: 48,
-                total_fiber_ports: 0,
-                ports: Array.from({ length: 16 }, (_, i) => ({
-                  id: null,
-                  port_number: i + 1,
-                  title: `Port ${i + 1}`,
+        {filters.selectedTypes[0] !== "Cables" && (
+          <div className="fixed bottom-5 right-5 z-40 flex items-start flex-col gap-0 md:bottom-6 md:right-2">
+            {/* Add Switch Button */}
+            <button
+              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+              aria-label="Add switch"
+              onClick={() => {
+                setSelectedSwitch({
+                  id: 0,
+                  name: "",
+                  type: "switch",
+                  floor: 1,
+                  active: true,
                   unique_id: "",
-                  switch_id: null,
-                  device_id: null,
-                  device: null,
-                  switch: null,
-                  patch_panel_port: null,
-                })),
-                show: true,
-              });
-              setModalMode("add");
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="ring-1 ring-emerald-300 size-8 mr-1 bg-emerald-500 text-white p-2 rounded-full shadow-sm" />
-            <span className="p-2 px-6 bg-emerald-500 rounded-full border border-emerald-300 shadow-sm">
-              Switch
-            </span>
-          </button>
+                  model: "",
+                  place: "",
+                  Mac: "",
+                  IP: "",
+                  Notes: "",
+                  POE: false,
+                  total_ports: 48,
+                  total_fiber_ports: 0,
+                  ports: Array.from({ length: 16 }, (_, i) => ({
+                    id: 0,
+                    port_number: i + 1,
+                    title: `Port ${i + 1}`,
+                    unique_id: "",
+                    switch_id: 0,
+                    device_id: null,
+                    device: null,
+                    switch: null,
+                    patch_panel_port: null,
+                  })),
+                  show: true,
+                });
+                setModalMode("add");
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="ring-1 ring-emerald-300 size-8 mr-1 bg-emerald-500 text-white p-2 rounded-full shadow-sm" />
+              <span className="p-2 px-6 bg-emerald-500 rounded-full border border-emerald-300 shadow-sm">
+                Switch
+              </span>
+            </button>
 
-          {/* Add Patch Panel Button */}
-          <button
-            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-            aria-label="Add patch panel"
-            onClick={() => {
-              setSelectedPatchPanel({
-                id: "",
-                title: "",
-                unique_id: "",
-                show: true,
-                floor: 1,
-                ports: Array.from({ length: 24 }, (_, i) => ({
-                  id: null,
-                  title: `Port ${i + 1}`,
-                  port_number: i + 1,
-                  switch_port: null,
-                })),
-              });
-              setModalMode("add");
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="ring-1 ring-blue-300 size-8 mr-1 bg-blue-500 text-white p-2 rounded-full shadow-sm" />
-            <span className="p-2 px-6 bg-blue-500 rounded-full border border-blue-300 shadow-sm">
-              Patch Panel
-            </span>
-          </button>
+            {/* Add Patch Panel Button */}
+            <button
+              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+              aria-label="Add patch panel"
+              onClick={() => {
+                setSelectedPatchPanel({
+                  id: 0,
+                  title: "",
+                  unique_id: "",
+                  show: true,
+                  floor: 1,
+                  ports: Array.from({ length: 24 }, (_, i) => ({
+                    id: 0,
+                    title: `Port ${i + 1}`,
+                    port_number: i + 1,
+                    switch_port: null,
+                    cable_number: "",
+                    cable_length: "",
+                  })),
+                });
+                setModalMode("add");
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="ring-1 ring-blue-300 size-8 mr-1 bg-blue-500 text-white p-2 rounded-full shadow-sm" />
+              <span className="p-2 px-6 bg-blue-500 rounded-full border border-blue-300 shadow-sm">
+                Patch Panel
+              </span>
+            </button>
 
-          {/* Add Device Button */}
-          <button
-            className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-            aria-label="Add device"
-            onClick={() => {
-              setSelectedDevice(null);
-              setModalMode("add");
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="ring-1 ring-slate-500 size-8  mr-1 bg-slate-900 text-white p-2 rounded-full shadow-sm" />
-            <span className="p-2 px-6 bg-slate-900 rounded-full border border-slate-500 shadow-sm">
-              Device
-            </span>
-          </button>
-        </div>
+            {/* Add Device Button */}
+            <button
+              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
+              aria-label="Add device"
+              onClick={() => {
+                setSelectedDevice(null);
+                setModalMode("add");
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="ring-1 ring-slate-500 size-8  mr-1 bg-slate-900 text-white p-2 rounded-full shadow-sm" />
+              <span className="p-2 px-6 bg-slate-900 rounded-full border border-slate-500 shadow-sm">
+                Device
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Device Modal */}
@@ -296,6 +308,10 @@ export default function Index() {
                 if (!open) {
                   setSelectedPatchPanel(null);
                 }
+              }}
+              onUpdate={(updatedPatchPanel) => {
+                // Update the selectedPatchPanel state to reflect changes
+                setSelectedPatchPanel(updatedPatchPanel);
               }}
               onSave={async (patch) => {
                 if (modalMode === "view") {
@@ -326,7 +342,26 @@ export default function Index() {
                       floor: patch.floor,
                     };
                     await editPatchPanel(updatedPatchPanel);
-                    // Refetch the devices data
+
+                    // Optimistically update cached data so reopening the modal
+                    // reflects the new port info immediately without requiring
+                    // a manual refresh.
+                    queryClient.setQueryData(["devices"], (oldData: any) => {
+                      if (!oldData) return oldData;
+                      return {
+                        ...oldData,
+                        patchPanels: oldData.patchPanels.map((pp: any) =>
+                          pp.id === updatedPatchPanel.id
+                            ? updatedPatchPanel
+                            : pp,
+                        ),
+                      };
+                    });
+
+                    // also update selectedPatchPanel in case user keeps modal open
+                    setSelectedPatchPanel(updatedPatchPanel);
+
+                    // Refetch in background to ensure consistency
                     await queryClient.invalidateQueries({
                       queryKey: ["devices"],
                     });
@@ -359,6 +394,10 @@ export default function Index() {
                 if (!open) {
                   setSelectedSwitch(null);
                 }
+              }}
+              onUpdate={(updatedSwitch) => {
+                // Update the selectedSwitch state to reflect changes
+                setSelectedSwitch(updatedSwitch);
               }}
               onSave={async (dev) => {
                 if (modalMode === "view") {
