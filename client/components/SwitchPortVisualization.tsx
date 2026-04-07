@@ -54,10 +54,6 @@ export function SwitchPortVisualization({
       });
   };
 
-  useEffect(() => {
-    fetchHosts();
-  }, [switchDevice.id]);
-
   // Build a port-number → host map from live data
   // MikroTik returns "ether5" → strip to "5"
   const portNumToHost: Record<string, ConnectedHost> = {};
