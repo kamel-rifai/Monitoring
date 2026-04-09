@@ -452,6 +452,7 @@ export default function Index() {
             isSubmitting={isSubmitting}
             onOpenChange={setModalOpen}
             switches={switches}
+            patchPanels={patchPanels}
             onSave={async (dev) => {
               if (modalMode === "view") {
                 setModalMode("edit");

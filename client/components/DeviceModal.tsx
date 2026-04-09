@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useEffect, useMemo, useState } from "react";
-import type { Device, Switch } from "@shared/api";
+import type { Device, Switch, PatchPanel } from "@shared/api";
 import { cn } from "@/lib/utils";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { X, FilePenLine, CheckCheck, Loader } from "lucide-react";
@@ -20,6 +20,7 @@ export interface DeviceModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (device: Device) => void;
   switches?: Switch[]; // Add switches prop to find connection info
+  patchPanels?: PatchPanel[]; // Add patchPanels prop to find patch panel connections
 }
 
 const TYPES = [
@@ -40,6 +41,7 @@ export function DeviceModal({
   onOpenChange,
   onSave,
   switches = [],
+  patchPanels = [],
 }: DeviceModalProps) {
   const isAdd = mode === "add";
   const isEdit = mode === "edit";
@@ -62,6 +64,44 @@ export function DeviceModal({
     }
     return null;
   }, [device, switches]);
+
+  // Find patch panel port this device is connected to
+  const patchPanelConnection = useMemo(() => {
+    if (!device || !patchPanels.length) return null;
+
+    for (const patchPanel of patchPanels) {
+      for (const port of patchPanel.ports) {
+        if (port.switch_port && port.switch_port.switch) {
+          // Find if this patch panel port connects to a switch port that has our device
+          const connectedSwitchPort = port.switch_port;
+          const switchDevice = switches.find(
+            (s) => s.id === connectedSwitchPort.switch.id,
+          );
+
+          if (switchDevice) {
+            const switchPort = switchDevice.ports.find(
+              (sp) => sp.port_number === connectedSwitchPort.port_number,
+            );
+
+            if (
+              switchPort &&
+              switchPort.device &&
+              String(switchPort.device.id) === String(device.id)
+            ) {
+              return {
+                patchPanelName: patchPanel.title,
+                patchPanelId: patchPanel.id,
+                portNumber: port.port_number,
+                portTitle: port.title,
+                cableNumber: port.cable_number,
+              };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }, [device, patchPanels, switches]);
   const base: Device = useMemo(() => {
     if (device) {
       return device;
@@ -102,7 +142,7 @@ export function DeviceModal({
         <div className="flex items-start justify-center gap-5">
           {!isAdd && (
             <div className="my-10">
-              <div className="w-64 h-64 bg-white/30 rounded-lg ring-1 ring-white/80 flex items-center justify-center">
+              <div className="w-64 h-64 bg-white/30 rounded-lg ring-1 ring-white/80 flex items-center justify-center relative">
                 <span className="text-white text-sm text-center">
                   <img
                     src={`/images/${form.model}.png`}
@@ -111,14 +151,29 @@ export function DeviceModal({
                     height={240}
                   />
                 </span>
+                <div
+                  className={`absolute -top-2 -right-2 w-6 h-6 rounded-full shadow-lg animate-color-pulse ${
+                    form.active
+                      ? "bg-green-600 shadow-green-400/60"
+                      : "bg-red-500 shadow-red-400/60"
+                  }`}
+                ></div>
               </div>
               <div className="w-64 h-10 mt-4 bg-white/30 rounded-lg ring-1 ring-white/80 flex items-center justify-center">
                 <span className="text-white text-sm text-center">
                   {connectionInfo
-                    ? `Connected to ${connectionInfo.switchName} - Port ${connectionInfo.portNumber}`
+                    ? `Switch: ${connectionInfo.switchName} - Port ${connectionInfo.portNumber}`
                     : "Not Connected - No Data"}
                 </span>
               </div>
+              {patchPanelConnection && (
+                <div className="w-64 h-10 mt-4 bg-white/30 rounded-lg ring-1 ring-white/80 flex items-center justify-center">
+                  <span className="text-white text-sm text-center">
+                    {`${patchPanelConnection.patchPanelName} - Port ${patchPanelConnection.portNumber}`}
+                    {patchPanelConnection.cableNumber && ``}
+                  </span>
+                </div>
+              )}
             </div>
           )}
           <div className="bg-white/30 rounded-lg ring-1 ring-white/80 my-10 pb-5">

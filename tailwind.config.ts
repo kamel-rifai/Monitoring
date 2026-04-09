@@ -65,6 +65,10 @@ export default {
         xl: "calc(var(--radius) + 4px)",
       },
       keyframes: {
+        "color-pulse": {
+          "0%, 100%": { opacity: "0.9" }, // Starting color (e.g., blue-500)
+          "50%": { opacity: "1" }, // Middle color (e.g., red-500)
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -83,6 +87,7 @@ export default {
         },
       },
       animation: {
+        "color-pulse": "color-pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
