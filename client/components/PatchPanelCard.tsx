@@ -3,15 +3,6 @@ import { cn } from "@/lib/utils";
 import { PanelTop } from "lucide-react";
 import type { PatchPanel } from "@shared/api";
 
-export const StatusDot = ({ active }: { active: boolean }) => (
-  <span
-    className={cn(
-      "inline-block size-2 rounded-full",
-      active ? "bg-emerald-500" : "bg-rose-500",
-    )}
-  />
-);
-
 export interface PatchPanelCardProps {
   patchPanel: PatchPanel;
   onLongPress?: (patchPanel: PatchPanel) => void;
@@ -76,9 +67,9 @@ function PatchPanelCardBase({ patchPanel, onLongPress }: PatchPanelCardProps) {
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-dashed border-slate-200 pt-2 text-xs text-slate-500 dark:border-slate-800/60">
-        <span>Panel ID</span>
-        <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300">
-          {String(patchPanel.id)}
+        <span className="font-medium">Panel ID</span>
+        <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
+          #{String(patchPanel.id)}
         </span>
       </div>
 

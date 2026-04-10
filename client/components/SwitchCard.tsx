@@ -3,15 +3,6 @@ import { cn } from "@/lib/utils";
 import { EthernetPort } from "lucide-react";
 import type { Switch } from "@shared/api";
 
-export const StatusDot = ({ active }: { active: boolean }) => (
-  <span
-    className={cn(
-      "inline-block size-2 rounded-full",
-      active ? "bg-emerald-500" : "bg-rose-500",
-    )}
-  />
-);
-
 export interface SwitchCardProps {
   switch: Switch;
   onLongPress?: (switchDevice: Switch) => void;
@@ -22,11 +13,12 @@ function SwitchCardBase({
   onLongPress,
 }: SwitchCardProps) {
   const timer = useRef<number | null>(null);
+
   const start = () => {
     if (!onLongPress) return;
-    clear();
-    timer.current = window.setTimeout(() => onLongPress(switchDevice), 10);
+    timer.current = window.setTimeout(() => onLongPress(switchDevice), 500);
   };
+
   const clear = () => {
     if (timer.current) {
       window.clearTimeout(timer.current);
@@ -37,55 +29,86 @@ function SwitchCardBase({
   return (
     <div
       className={cn(
-        "group relative grid h-auto max-h-[120px] min-w-[190px] max-w-[220px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:text-slate-900 dark:border-slate-800/60 dark:bg-slate-900 md:max-h-[180px]",
-        !switchDevice.show &&
-          "opacity-70 grayscale-[0.3] bg-slate-100 dark:bg-slate-800",
+        // Matches DeviceCard Layout
+        "group relative flex flex-col justify-between overflow-hidden rounded-xl p-4 transition-all duration-300 ease-out",
+        "h-[140px] w-full min-w-[190px] border ring-1 ring-transparent",
+
+        // Light Mode
+        "bg-white border-slate-200/60 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-xl hover:ring-slate-200",
+
+        // Dark Mode
+        "dark:bg-slate-950 dark:border-slate-800/50 dark:hover:bg-slate-900/50 dark:hover:ring-slate-800",
+
+        // State: Hidden
+        !switchDevice.show && "opacity-70 grayscale pointer-events-none",
+
+        // Hover translation
+        "hover:-translate-y-1",
       )}
-      role="listitem"
-      title={switchDevice.IP}
+      onPointerDown={start}
+      onPointerUp={clear}
+      onPointerLeave={clear}
     >
-      <div
-        className={cn(
-          "-mx-3 -mt-3 h-[6px] rounded-t-xl bg-gradient-to-r shadow-sm",
-          !switchDevice.show
-            ? "from-slate-500 to-slate-700"
-            : switchDevice.active
-              ? "from-emerald-500 to-green-500"
-              : "from-rose-500 to-red-500",
-        )}
-      />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <EthernetPort className="size-5 text-slate-600" />
-          <span className="text-[11px] font-medium text-slate-500">Switch</span>
+      {/* Background Status Glow (Premium touch) */}
+      {switchDevice.active && switchDevice.show && (
+        <div className="absolute -right-4 -top-4 size-16 bg-emerald-500/20 blur-2xl transition-opacity group-hover:bg-emerald-500/30" />
+      )}
+
+      {!switchDevice.active && switchDevice.show && (
+        <div className="absolute -right-4 -top-4 size-16 bg-red-500/20 blur-2xl transition-opacity group-hover:bg-red-500/30" />
+      )}
+
+      {/* Header: Icon & ID Metadata */}
+      <div className="flex items-start justify-between">
+        <div
+          className={cn(
+            "flex size-9 items-center justify-center rounded-lg border transition-colors",
+            switchDevice.active
+              ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+              : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50",
+          )}
+        >
+          <EthernetPort
+            className={cn(
+              "size-4 transition-colors duration-300",
+              switchDevice.active
+                ? "text-emerald-500"
+                : "text-slate-400 dark:text-slate-500",
+            )}
+          />
         </div>
-        {!switchDevice.show && (
-          <span className="text-[9px] font-medium text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded dark:bg-slate-700 dark:text-slate-500">
-            HIDDEN
+
+        <div className="flex flex-col items-end gap-1">
+          <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
+            #{String(switchDevice.id).padStart(3, "0")}
           </span>
-        )}
+          {!switchDevice.show && (
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+              Hidden
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="mt-3">
-        <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white md:text-base">
+      {/* Content: Name & Model/IP */}
+      <div className="mt-4">
+        <h3 className="truncate text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100">
           {switchDevice.name}
         </h3>
-        <p className="mt-1 text-xs text-slate-500 md:text-sm">
-          {switchDevice.IP}
-        </p>
-        <p className="mt-1 text-xs text-slate-400">
-          {switchDevice.ports.length} ports
-        </p>
+        <div className="mt-0.5 flex items-center gap-1.5 text-slate-500">
+          <code className="text-[12px] font-medium tracking-tight opacity-80 font-mono">
+            {switchDevice.IP || "Unknown"}
+          </code>
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-dashed border-slate-200 pt-2 text-xs text-slate-500 dark:border-slate-800/60">
-        <span>Switch ID</span>
-        <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300">
-          {String(switchDevice.id)}
-        </span>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 -bottom-4 mx-3 h-8 translate-y-2 rounded-full bg-slate-900/10 opacity-0 blur-xl transition group-hover:opacity-60 dark:bg-white/10" />
+      {/* Subtle Bottom Accent Line */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 h-[2px] w-0 transition-all duration-500 group-hover:w-full",
+          switchDevice.active ? "bg-emerald-500" : "bg-rose-500",
+        )}
+      />
     </div>
   );
 }

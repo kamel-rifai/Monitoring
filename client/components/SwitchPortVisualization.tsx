@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { EthernetPort, Wifi, Monitor, Loader2, RefreshCw } from "lucide-react";
 import type { Switch } from "@shared/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const API_BASE = "http://192.168.200.245:3666";
 

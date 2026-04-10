@@ -28,6 +28,62 @@ import {
 } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import CableManagement from "@/components/CableSection";
+import { cn } from "@/lib/utils";
+
+function ActionButton({
+  label,
+  icon,
+  onClick,
+  accentColor,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  accentColor: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "group relative flex items-center gap-3 overflow-hidden rounded-xl p-2 pr-5 transition-all duration-300 ease-out",
+        "border shadow-sm hover:shadow-xl hover:-translate-y-1",
+
+        // Light Mode
+        "bg-white border-slate-200/60 text-slate-800 hover:ring-slate-200",
+
+        // Dark Mode
+        "dark:bg-slate-950 dark:border-slate-800/50 dark:hover:bg-slate-900/50 dark:hover:ring-slate-800 dark:text-slate-100",
+      )}
+    >
+      {/* Icon Container - Matches the DeviceCard top-left icon box */}
+      <div
+        className={cn(
+          "flex size-9 items-center justify-center rounded-lg border transition-colors",
+          "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50 group-hover:border-transparent group-hover:bg-opacity-100",
+          label === "Switch" &&
+            "group-hover:bg-emerald-500/10 group-hover:text-emerald-500",
+          label === "Patch Panel" &&
+            "group-hover:bg-blue-500/10 group-hover:text-blue-500",
+        )}
+      >
+        {icon}
+      </div>
+
+      {/* Label - Matches the "ID badge" font style */}
+      <span className="font-mono text-[12px] font-bold uppercase tracking-tight opacity-80">
+        {label}
+      </span>
+
+      {/* Subtle Bottom Accent Line - Matches DeviceCard hover effect */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 h-[2px] w-0 transition-all duration-500 group-hover:w-full",
+          accentColor,
+        )}
+      />
+    </button>
+  );
+}
 
 export default function Index() {
   const queryClient = useQueryClient();
@@ -198,11 +254,12 @@ export default function Index() {
 
         {/* Add Buttons */}
         {filters.selectedTypes[0] !== "Cables" && (
-          <div className="fixed bottom-5 right-5 z-40 flex items-start flex-col gap-0 md:bottom-6 md:right-2">
+          <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 md:right-4">
             {/* Add Switch Button */}
-            <button
-              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-              aria-label="Add switch"
+            <ActionButton
+              label="Switch"
+              icon={<Plus className="size-4" />}
+              accentColor="bg-emerald-500"
               onClick={() => {
                 setSelectedSwitch({
                   id: 0,
@@ -235,17 +292,13 @@ export default function Index() {
                 setModalMode("add");
                 setModalOpen(true);
               }}
-            >
-              <Plus className="ring-1 ring-emerald-300 size-8 mr-1 bg-emerald-500 text-white p-2 rounded-full shadow-sm" />
-              <span className="p-2 px-6 bg-emerald-500 rounded-full border border-emerald-300 shadow-sm">
-                Switch
-              </span>
-            </button>
+            />
 
             {/* Add Patch Panel Button */}
-            <button
-              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-              aria-label="Add patch panel"
+            <ActionButton
+              label="Patch Panel"
+              icon={<Plus className="size-4" />}
+              accentColor="bg-blue-500"
               onClick={() => {
                 setSelectedPatchPanel({
                   id: 0,
@@ -265,28 +318,19 @@ export default function Index() {
                 setModalMode("add");
                 setModalOpen(true);
               }}
-            >
-              <Plus className="ring-1 ring-blue-300 size-8 mr-1 bg-blue-500 text-white p-2 rounded-full shadow-sm" />
-              <span className="p-2 px-6 bg-blue-500 rounded-full border border-blue-300 shadow-sm">
-                Patch Panel
-              </span>
-            </button>
+            />
 
             {/* Add Device Button */}
-            <button
-              className="inline-flex items-center justify-center rounded-full border bg-transparent border-none border-emerald-300 bg-emerald-500 text-white transition hover:-translate-y-0.5 px-4 py-2 text-sm font-medium"
-              aria-label="Add device"
+            <ActionButton
+              label="Device"
+              icon={<Plus className="size-4" />}
+              accentColor="bg-emerald-500"
               onClick={() => {
                 setSelectedDevice(null);
                 setModalMode("add");
                 setModalOpen(true);
               }}
-            >
-              <Plus className="ring-1 ring-slate-500 size-8  mr-1 bg-slate-900 text-white p-2 rounded-full shadow-sm" />
-              <span className="p-2 px-6 bg-slate-900 rounded-full border border-slate-500 shadow-sm">
-                Device
-              </span>
-            </button>
+            />
           </div>
         )}
       </div>

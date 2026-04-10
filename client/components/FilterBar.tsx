@@ -10,6 +10,7 @@ import {
   PanelTop,
   Cable,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface FilterBarProps {
   types: string[];
@@ -18,26 +19,36 @@ export interface FilterBarProps {
   onClear: () => void;
 }
 
-function TypeIcon({ type }: { type: string }) {
+function TypeIcon({ type, active }: { type: string; active: boolean }) {
   switch (type) {
     case "camera":
-      return <Cctv className="size-4" />;
+      return <Cctv className={`size-4 ${active ? "text-emerald-500" : ""}`} />;
     case "telephone":
-      return <Phone className="size-4" />;
+      return <Phone className={`size-4 ${active ? "text-emerald-500" : ""}`} />;
     case "nursing":
-      return <Stethoscope className="size-4" />;
+      return (
+        <Stethoscope className={`size-4 ${active ? "text-emerald-500" : ""}`} />
+      );
     case "accesspoint":
-      return <Wifi className="size-4" />;
+      return <Wifi className={`size-4 ${active ? "text-emerald-500" : ""}`} />;
     case "access-door":
-      return <DoorClosed className="size-4" />;
+      return (
+        <DoorClosed className={`size-4 ${active ? "text-emerald-500" : ""}`} />
+      );
     case "Switch":
-      return <EthernetPort className="size-4" />;
+      return (
+        <EthernetPort
+          className={`size-4 ${active ? "text-emerald-500" : ""}`}
+        />
+      );
     case "Patch-Panel":
-      return <PanelTop className="size-4" />;
+      return (
+        <PanelTop className={`size-4 ${active ? "text-emerald-500" : ""}`} />
+      );
     case "Cables":
-      return <Cable className="size-4" />;
+      return <Cable className={`size-4 ${active ? "text-emerald-500" : ""}`} />;
     default:
-      return <Box className="size-4" />;
+      return <Box className={`size-4 ${active ? "text-emerald-500" : ""}`} />;
   }
 }
 
@@ -55,54 +66,76 @@ export function FilterBar({ types, selected, onToggle }: FilterBarProps) {
 
   return (
     <div className="mt-2 flex flex-col gap-2 items-start m-2 justify-start">
-      {allTypes.map((t) => {
-        const active = selected.includes(t);
-        return (
-          <>
+      <div className="flex flex-wrap gap-2">
+        {allTypes.map((t) => {
+          const active = selected.includes(t);
+
+          return (
             <button
+              key={t}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggle(t);
               }}
-              className={`${
-                active
-                  ? "bg-[#0F2854] shadow-2xl border border-[#0F2854]/40"
-                  : "bg-[#035AD7]/75 border border-[#035AD7]/10 hover:bg-[#035AD7]/80 transition dirat "
-              } flex items-center w-[11.5vw] p-2 py-1.8 justify-start text-white rounded-2xl  `}
-            >
-              <div
-                className={
-                  active
-                    ? "ring-1 ring-white/40 bg-white/30 rounded-full w-7 h-7 flex items-center justify-center "
-                    : "ring-1 ring-white/40 bg-white/30 rounded-full w-7 h-7 flex items-center justify-center"
-                }
-              >
-                <TypeIcon type={t} />
-              </div>
-              <span
-                className={`${active ? `ml-2 font-cairo text-sm text-white` : `ml-2 font-cairo text-sm text-white`}`}
-              >
-                {capitalizeFirstLetter(t)}
-              </span>
-            </button>
-            {/*<button
-              type="button"
-              key={t}
-              onClick={() => onToggle(t)}
               className={cn(
-                "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm transition",
-                active
-                  ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-800 dark:border-white dark:bg-white dark:text-slate-900"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200",
+                // Base Layout: Matches the "compact" feel of the DeviceCard header
+                "group relative flex items-center min-w-[220px] gap-3 overflow-hidden rounded-xl p-2 pr-4 transition-all duration-300 ease-out",
+                "border ring-1 ring-transparent",
+
+                // Light Mode
+                "bg-white border-slate-200/60 shadow-sm hover:shadow-md hover:ring-slate-200",
+
+                // Dark Mode
+                "dark:bg-slate-950 dark:border-slate-800/50 dark:hover:bg-slate-900/50 dark:hover:ring-slate-800",
+
+                // Active State: Slight elevation and stronger border
+                active &&
+                  "ring-slate-200 dark:ring-slate-800 shadow-md translate-y-[-1px]",
               )}
-              aria-pressed={active}
             >
-              <TypeIcon type={t} />
-              <span className="truncate">{capitalizeFirstLetter(t)}</span>
-            </button>*/}
-          </>
-        );
-      })}
+              {/* Icon Box: Exact mirror of the DeviceCard icon container */}
+              <div
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-lg border transition-colors duration-300",
+                  active
+                    ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+                    : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50 group-hover:bg-slate-100 dark:group-hover:bg-slate-800",
+                )}
+              >
+                {/* Reuse your existing TypeIcon component */}
+                <TypeIcon type={t} active={active} />
+              </div>
+
+              {/* Text: Mono-spaced and small like the Device ID # */}
+              <span
+                className={cn(
+                  "text-[13px] font-bold  tracking-tight transition-colors duration-300",
+                  active
+                    ? "text-slate-900 dark:text-white"
+                    : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200",
+                )}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </span>
+
+              {/* Bottom Accent Line: Signature hover/active effect */}
+              <div
+                className={cn(
+                  "absolute bottom-0 left-0 h-[2px] transition-all duration-500",
+                  active
+                    ? "w-full bg-emerald-500"
+                    : "w-0 bg-blue-400 group-hover:w-full",
+                )}
+              />
+
+              {/* Background Status Glow for Active state */}
+              {active && (
+                <div className="absolute -right-2 -top-2 size-8 bg-emerald-500/10 blur-xl pointer-events-none" />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

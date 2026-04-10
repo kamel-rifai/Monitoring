@@ -1,33 +1,37 @@
 import { memo, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Phone, Stethoscope, Wifi, Box, DoorClosed, Cctv } from "lucide-react";
+import {
+  Phone,
+  Stethoscope,
+  Wifi,
+  Box,
+  DoorClosed,
+  Cctv,
+  Info,
+} from "lucide-react";
 import type { Device } from "@shared/api";
 
-function TypeIcon({ type }: { type: string }) {
+function TypeIcon({ type, active }: { type: string; active: boolean }) {
+  const iconClass = cn(
+    "size-4 transition-colors duration-300",
+    active ? "text-emerald-500" : "text-red-400 dark:text-red-500",
+  );
+
   switch (type) {
     case "camera":
-      return <Cctv className="size-5 text-slate-600" />;
+      return <Cctv className={iconClass} />;
     case "telephone":
-      return <Phone className="size-5 text-slate-600" />;
+      return <Phone className={iconClass} />;
     case "nursing":
-      return <Stethoscope className="size-5 text-slate-600" />;
+      return <Stethoscope className={iconClass} />;
     case "accesspoint":
-      return <Wifi className="size-5 text-slate-600" />;
+      return <Wifi className={iconClass} />;
     case "access-door":
-      return <DoorClosed className="size-5 text-slate-600" />;
+      return <DoorClosed className={iconClass} />;
     default:
-      return <Box className="size-5 text-slate-600" />;
+      return <Box className={iconClass} />;
   }
 }
-
-export const StatusDot = ({ active }: { active: boolean }) => (
-  <span
-    className={cn(
-      "inline-block size-2 rounded-full",
-      active ? "bg-emerald-500" : "bg-rose-500",
-    )}
-  />
-);
 
 export interface DeviceCardProps {
   device: Device;
@@ -36,11 +40,12 @@ export interface DeviceCardProps {
 
 function DeviceCardBase({ device, onLongPress }: DeviceCardProps) {
   const timer = useRef<number | null>(null);
+
   const start = () => {
     if (!onLongPress) return;
-    clear();
     timer.current = window.setTimeout(() => onLongPress(device), 500);
   };
+
   const clear = () => {
     if (timer.current) {
       window.clearTimeout(timer.current);
@@ -51,55 +56,73 @@ function DeviceCardBase({ device, onLongPress }: DeviceCardProps) {
   return (
     <div
       className={cn(
-        "group relative grid h-auto max-h-[120px] min-w-[190px] max-w-[220px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800/60 dark:bg-slate-900 md:max-h-[180px]",
-        !device.show &&
-          "opacity-70 grayscale-[0.3] bg-slate-100 dark:bg-slate-800",
+        // Layout: Use Flex instead of Grid for better vertical centering at high scale
+        "group relative flex flex-col justify-between overflow-hidden rounded-xl p-4 transition-all duration-300 ease-out",
+        "h-[140px] w-full min-w-[180px] border ring-1 ring-transparent",
+
+        // Light Mode
+        "bg-white border-slate-200/60 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-xl hover:ring-slate-200",
+
+        // Dark Mode
+        "dark:bg-slate-950 dark:border-slate-800/50 dark:hover:bg-slate-900/50 dark:hover:ring-slate-800",
+
+        // State: Hidden
+        !device.show && "opacity-40 grayscale pointer-events-none",
+
+        // Hover translation
+        "hover:-translate-y-1",
       )}
-      role="listitem"
       onPointerDown={start}
       onPointerUp={clear}
-      onPointerCancel={clear}
       onPointerLeave={clear}
     >
-      <div
-        className={cn(
-          "-mx-3 -mt-3 h-[6px] rounded-t-xl bg-gradient-to-r shadow-sm",
-          !device.show
-            ? "from-slate-500 to-slate-700"
-            : device.active
-              ? "from-emerald-500 to-green-500"
-              : "from-rose-500 to-red-500",
-        )}
-      />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <TypeIcon type={device.type} />
-          <span className="text-[11px] font-medium text-slate-500">
-            {device.type}
+      {/* Background Status Glow (Premium touch) */}
+      {device.active && device.show && (
+        <div className="absolute -right-4 -top-4 size-16 bg-emerald-500/20 blur-2xl transition-opacity group-hover:bg-emerald-500/30" />
+      )}
+      {!device.active && device.show && (
+        <div className="absolute -right-4 -top-4 size-16 bg-red-500/20 blur-2xl transition-opacity group-hover:bg-red-500/30" />
+      )}
+
+      {/* Header: Icon & Metadata */}
+      <div className="flex items-start justify-between">
+        <div
+          className={cn(
+            "flex size-9 items-center justify-center rounded-lg border transition-colors",
+            device.active
+              ? "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+              : "bg-red-50 border-red-100",
+          )}
+        >
+          <TypeIcon type={device.type} active={device.active} />
+        </div>
+
+        <div className="flex flex-col items-end gap-1">
+          <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
+            #{String(device.id).padStart(3, "0")}
           </span>
         </div>
-        {!device.show && (
-          <span className="text-[9px] font-medium text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded dark:bg-slate-700 dark:text-slate-500">
-            HIDDEN
-          </span>
-        )}
       </div>
 
-      <div className="mt-3">
-        <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-white md:text-base">
+      {/* Content: Name & IP */}
+      <div className="mt-4">
+        <h3 className="truncate text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100">
           {device.name}
         </h3>
-        <p className="mt-1 text-xs text-slate-500 md:text-sm">{device.IP}</p>
+        <div className="mt-0.5 flex items-center gap-1.5 text-slate-500">
+          <code className="text-[12px] font-medium tracking-tight opacity-80">
+            {device.IP}
+          </code>
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-dashed border-slate-200 pt-2 text-xs text-slate-500 dark:border-slate-800/60">
-        <span>Device ID</span>
-        <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300">
-          {String(device.id)}
-        </span>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 -bottom-4 mx-3 h-8 translate-y-2 rounded-full bg-slate-900/10 opacity-0 blur-xl transition group-hover:opacity-60 dark:bg-white/10" />
+      {/* Subtle Bottom Accent Line */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 h-[2px] w-0 transition-all duration-500 group-hover:w-full",
+          device.active ? "bg-emerald-500" : "bg-rose-500",
+        )}
+      />
     </div>
   );
 }

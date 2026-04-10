@@ -151,18 +151,26 @@ export function DeviceModal({
                     height={240}
                   />
                 </span>
-                <div
-                  className={`absolute -top-2 -right-2 w-6 h-6 rounded-full shadow-lg animate-color-pulse ${
-                    form.active
-                      ? "bg-green-600 shadow-green-400/60"
-                      : "bg-red-500 shadow-red-400/60"
-                  }`}
-                ></div>
+                {form.active ? (
+                  <div className={`absolute -top-2 -right-2`}>
+                    <span className="relative flex h-6 w-6">
+                      <span className="animate-ping absolute -top-0 inline-flex h-full w-full rounded-full bg-emerald-500"></span>
+                      <span className="relative inline-flex rounded-full h-6 w-6 bg-emerald-500/95"></span>
+                    </span>
+                  </div>
+                ) : (
+                  <div className={`absolute -top-2 -right-2`}>
+                    <span className="relative flex h-6 w-6">
+                      <span className="animate-ping absolute -top-0 inline-flex h-full w-full rounded-full bg-red-500/90"></span>
+                      <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500/80"></span>
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="w-64 h-10 mt-4 bg-white/30 rounded-lg ring-1 ring-white/80 flex items-center justify-center">
                 <span className="text-white text-sm text-center">
                   {connectionInfo
-                    ? `Switch: ${connectionInfo.switchName} - Port ${connectionInfo.portNumber}`
+                    ? ` ${connectionInfo.switchName} - Port ${connectionInfo.portNumber}`
                     : "Not Connected - No Data"}
                 </span>
               </div>

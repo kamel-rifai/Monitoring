@@ -1,5 +1,4 @@
 import { FilterBar } from "@/components/FilterBar";
-import { StatusDot } from "@/components/DeviceCard";
 import { cn } from "@/lib/utils";
 import type { Device } from "@shared/api";
 import type { ReactNode } from "react";
