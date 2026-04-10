@@ -18,5 +18,5 @@ jobs:
       run: docker build . --file Dockerfile --tag kamelrifai1/monitoring2026:latest
     - name: Push the Docker image
       run: |
-        docker login -u kamelrifai1 -p {{ secrets.DOCKER_HUB_TOKEN }}
+        docker login -u kamelrifai1 -p ${{ secrets.DOCKER_HUB_TOKEN }}
         docker push kamelrifai1/monitoring2026:latest
